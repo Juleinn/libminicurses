@@ -58,3 +58,56 @@ rw.add(subw)
 rw.run()
 ```
 As many windows as needed may be nested, too high nesting is not recommended though because it wouldn't be straighforward to understand for the user on a 80x24 characters display.
+
+### Custom controls
+It is possible to create custom controls by inheriting any classe provided by the library.  
+The following example shows how to create a custom window :
+```python
+import minicurses
+from minicurses import Window
+import emulator
+
+class MyTitledWindow(Window):
+	def __init__(self, x, y, w, h, title=""):
+		super().__init__(x, y, w, h)
+		self.title_label = minicurses.Label(0, 1, title)
+		self.add(self.title_label)
+
+terminal = emulator.BorderedEmulator()
+rw = minicurses.RootWindow(terminal)
+tw1 = MyTitledWindow(3, 3, 30, 5, "Titled Window 1")
+tw2 = MyTitledWindow(10, 3, 30, 5, "Titled Window 2")
+rw.add(tw1)
+rw.add(tw2)
+rw.run()
+```
+
+Which gives the following result :
+```bash
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+║   +Titled Window 1-------------+                                              ║
+║   |                            |                                              ║
+║   |                            |                                              ║
+║   |                            |                                              ║
+║   +----------------------------+                                              ║
+║                                                                               ║
+║                                                                               ║
+║   +Titled Window 2-------------+                                              ║
+║   |                            |                                              ║
+║   |                            |                                              ║
+║   |                            |                                              ║
+║   +----------------------------+                                              ║
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+```
