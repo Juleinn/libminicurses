@@ -60,7 +60,7 @@ rw.run()
 As many windows as needed may be nested, too high nesting is not recommended though because it wouldn't be straighforward to understand for the user on a 80x24 characters display.
 
 ### Custom controls
-It is possible to create custom controls by inheriting any classe provided by the library.  
+It is possible to create custom controls by inheriting any class provided by the library.  
 The following example shows how to create a custom window :
 ```python
 import minicurses
@@ -83,7 +83,7 @@ rw.run()
 ```
 
 Which gives the following result :
-```bash
+```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                               ║
 ║                                                                               ║
@@ -111,3 +111,44 @@ Which gives the following result :
 ║                                                                               ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 ```
+
+## Events
+Widgets (Windows, Label, ...) may handle a set of events or forward them down to its active child.  
+The above example show the default handling of events : with the Up/Down arrows, you may change the active child of the Root Window (Notice the cursor position change).  
+If you hit enter, the active child of the root window (one of the titled windows) will be selected, it will have focus and handle events. The parent (root) window will forward events down to it.
+
+#### Event structure
+The minicurses.WindowEvent class describes any event that may be handled by the widgets. It consists in a *type* field that describes the event type and a *key* field, which is the key pressed in case of an ascii keystroke event.
+
+#### Event handling
+*Widget.handle_event(event)* is  in charge of handling the event forwarded by the parent widget.
+Default windows forward events down to the active child.
+If the window is selected, the Up/Down key select the active child in the window.  
+Hitting enter gets the selected window to send a 'FOCUS' event to its active child, which may then accept or deny focus.
+Return values of *handle_event* are important as they allows children widgets to send events back to their parent widget (DEFOCUS, ...).
+
+#### Custom event handling
+You may add create your own behavior upon event triggering for a given control. Simply override the *handle_event* method. For instance, with the previous example :
+
+```python
+...
+from minicurses import Window, WindowEvent
+...
+class MyTitledWindow(Window):
+	def __init__(self, x, y, w, h, title=""):
+		super().__init__(x, y, w, h)
+		self.title_label = minicurses.Label(0, 1, title)
+		self.add(self.title_label)
+
+	def handle_event(self, event):
+		if event and event.type == WindowEvent.FOCUS:
+			self.title_label.text = "Window has been selected"
+		return super().handle_event(event)
+```
+
+If you hit enter, the root window will send a focus event to the child window, which will change its title, then have the default behavior (accept focus).  
+Note that events can be *None*, which is why *if event* is required
+
+#### Passive children
+You may have noticed that by hitting enter twice, the subwindow will select its title as selected widget.
+This can be an issue because such labels may not be meant be selected, which is why children can be added as passive to a window using *Window.add_passive(child)*. This allows to have children displayed without being processed in the event handling.
